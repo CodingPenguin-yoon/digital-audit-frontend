@@ -7,11 +7,11 @@ import { departments } from "./departments.js";
 import "./command-tools.css";
 
 export const features = [
-  { id: "upload", number: "01", title: "데이터 업로드", description: "거래 내역과 증빙을 모아 점검을 준비합니다.", color: "#ea002c" },
-  { id: "detect", number: "02", title: "이상징후 탐지", description: "검토가 필요한 거래를 좁히고 판단의 근거를 확인합니다.", color: "#ea002c" },
-  { id: "discover", number: "03", title: "새 패턴 발견", description: "기존 점검 기준 너머의 반복과 연결을 살펴봅니다.", color: "#ff7a00" },
-  { id: "compare", number: "04", title: "증빙 대조", description: "거래 내역과 증빙의 세부 항목을 비교합니다.", color: "#ff7a00" },
-  { id: "forgery", number: "05", title: "위변조 분석", description: "파일의 동일성, 이미지 신호와 생성 이력을 살펴봅니다.", color: "#ea002c" },
+  { id: "upload", number: "01", title: "데이터 업로드", description: "거래 내역과 증빙을 모아 점검을 준비합니다.", color: "#c7a45e" },
+  { id: "detect", number: "02", title: "이상징후 탐지", description: "검토가 필요한 거래를 좁히고 판단의 근거를 확인합니다.", color: "#c7a45e" },
+  { id: "discover", number: "03", title: "새 패턴 발견", description: "기존 점검 기준 너머의 반복과 연결을 살펴봅니다.", color: "#dfc38a" },
+  { id: "compare", number: "04", title: "증빙 대조", description: "거래 내역과 증빙의 세부 항목을 비교합니다.", color: "#dfc38a" },
+  { id: "forgery", number: "05", title: "위변조 분석", description: "파일의 동일성, 이미지 신호와 생성 이력을 살펴봅니다.", color: "#c7a45e" },
 ];
 
 const totalTransactions = departments.reduce((sum, item) => sum + item.transactions, 0);

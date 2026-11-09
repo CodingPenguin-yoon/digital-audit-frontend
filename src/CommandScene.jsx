@@ -43,12 +43,12 @@ export function CommandScene({ departments, selectedId, onSelect, autoRotate = t
     renderer.toneMappingExposure = 1.3;
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFShadowMap;
-    renderer.setClearColor(0x050b14, 0);
+    renderer.setClearColor(0x090909, 0);
     renderer.domElement.setAttribute("aria-hidden", "true");
     mount.appendChild(renderer.domElement);
 
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x07101b, 0.025);
+    scene.fog = new THREE.FogExp2(0x090909, 0.025);
     const camera = new THREE.PerspectiveCamera(37, 1, 0.1, 100);
     const cameraDirection = new THREE.Vector3(10.5, 6.1, 13.5).normalize();
     camera.position.copy(cameraDirection).multiplyScalar(14.4);
@@ -63,9 +63,9 @@ export function CommandScene({ departments, selectedId, onSelect, autoRotate = t
     controls.rotateSpeed = 0.35;
     controls.update();
 
-    const hemisphere = new THREE.HemisphereLight(0xb9d9ff, 0x080b15, 2.8);
+    const hemisphere = new THREE.HemisphereLight(0xfff0d7, 0x171713, 2.8);
     scene.add(hemisphere);
-    const key = new THREE.DirectionalLight(0xdbe9ff, 4.6);
+    const key = new THREE.DirectionalLight(0xfff0d7, 4.6);
     key.position.set(-4, 14, 7);
     key.castShadow = true;
     key.shadow.mapSize.set(2048, 2048);
@@ -76,22 +76,22 @@ export function CommandScene({ departments, selectedId, onSelect, autoRotate = t
     key.shadow.normalBias = 0.04;
     key.shadow.bias = -0.0002;
     scene.add(key);
-    const redLight = new THREE.PointLight(0xff254f, 22, 16, 2);
+    const redLight = new THREE.PointLight(0xe7c888, 22, 16, 2);
     redLight.position.set(4, 3, 5);
     scene.add(redLight);
-    const orangeLight = new THREE.PointLight(0xff7a00, 12, 15, 2);
+    const orangeLight = new THREE.PointLight(0xb18b43, 12, 15, 2);
     orangeLight.position.set(-5, 2.5, 2);
     scene.add(orangeLight);
-    const rimLight = new THREE.PointLight(0x78b8df, 32, 20, 2);
+    const rimLight = new THREE.PointLight(0xd4d1c8, 32, 20, 2);
     rimLight.position.set(-2, 5, -6);
     scene.add(rimLight);
 
-    const graphite = new THREE.MeshStandardMaterial({ color: 0x25394d, metalness: 0.6, roughness: 0.34 });
-    const silver = new THREE.MeshStandardMaterial({ color: 0x8ca7bd, metalness: 0.65, roughness: 0.3 });
-    const black = new THREE.MeshStandardMaterial({ color: 0x080e18, metalness: 0.5, roughness: 0.65 });
-    const redWire = new THREE.MeshStandardMaterial({ color: 0xea002c, emissive: 0xea002c, emissiveIntensity: 2.5, metalness: 0.4, roughness: 0.4 });
-    const orangeWire = new THREE.MeshStandardMaterial({ color: 0xff7a00, emissive: 0xff5000, emissiveIntensity: 2.2, roughness: 0.5 });
-    const coolWire = new THREE.MeshStandardMaterial({ color: 0x517f9d, emissive: 0x1a5474, emissiveIntensity: 0.6, metalness: 0.4, roughness: 0.5 });
+    const graphite = new THREE.MeshStandardMaterial({ color: 0x171713, metalness: 0.6, roughness: 0.34 });
+    const silver = new THREE.MeshStandardMaterial({ color: 0xd3ba83, metalness: 0.65, roughness: 0.3 });
+    const black = new THREE.MeshStandardMaterial({ color: 0x090909, metalness: 0.5, roughness: 0.65 });
+    const redWire = new THREE.MeshStandardMaterial({ color: 0xb18b43, emissive: 0xb18b43, emissiveIntensity: 2.5, metalness: 0.4, roughness: 0.4 });
+    const orangeWire = new THREE.MeshStandardMaterial({ color: 0xb18b43, emissive: 0xb18b43, emissiveIntensity: 2.2, roughness: 0.5 });
+    const coolWire = new THREE.MeshStandardMaterial({ color: 0x797762, emissive: 0x534b31, emissiveIntensity: 0.6, metalness: 0.4, roughness: 0.5 });
     const allMaterials = [graphite, silver, black, redWire, orangeWire, coolWire];
     const ownGeometries = new Set();
     const mesh = (geometry, material, parent, position = [0, 0, 0], shadows = true) => {
@@ -109,7 +109,7 @@ export function CommandScene({ departments, selectedId, onSelect, autoRotate = t
       return object;
     };
 
-    const floorMaterial = new THREE.MeshStandardMaterial({ color: 0x283747, metalness: 0.18, roughness: 0.88 });
+    const floorMaterial = new THREE.MeshStandardMaterial({ color: 0x80704a, metalness: 0.18, roughness: 0.88 });
     allMaterials.push(floorMaterial);
     const floor = mesh(new THREE.CircleGeometry(8.3, 96), floorMaterial, scene, [0, -0.98, 0]);
     floor.rotation.x = -Math.PI / 2;
@@ -144,7 +144,7 @@ export function CommandScene({ departments, selectedId, onSelect, autoRotate = t
     mesh(new THREE.CylinderGeometry(0.68, 0.84, 0.17, 48), graphite, stage, [0, -0.4, 0]);
     horizontalTorus(0.69, 0.018, orangeWire, stage, -0.3);
     const core = mesh(new THREE.CylinderGeometry(0.44, 0.44, 0.24, 48), black, stage, [0, -0.2, 0]);
-    const coreLight = new THREE.PointLight(0xe40035, 5, 4, 2);
+    const coreLight = new THREE.PointLight(0xb18b43, 5, 4, 2);
     coreLight.position.set(0, 0.3, 0);
     stage.add(coreLight);
 
@@ -169,9 +169,9 @@ export function CommandScene({ departments, selectedId, onSelect, autoRotate = t
       group.position.set(Math.sin(angle) * 4.28, 0.09, Math.cos(angle) * 4.28);
       group.rotation.y = angle;
       stage.add(group);
-      const activeColor = department.anomalies ? 0xa12843 : 0x476d86;
-      const towerMaterial = new THREE.MeshStandardMaterial({ color: activeColor, emissive: department.anomalies ? 0x8f0025 : 0x163950, emissiveIntensity: department.anomalies ? 0.22 : 0.1, metalness: 0.5, roughness: 0.34 });
-      const bandMaterial = new THREE.MeshStandardMaterial({ color: department.anomalies ? 0xff4f63 : 0x80aeca, emissive: department.anomalies ? 0xe00032 : 0x447b9b, emissiveIntensity: 0.7, roughness: 0.45 });
+      const activeColor = department.anomalies ? 0xbb9249 : 0x44463f;
+      const towerMaterial = new THREE.MeshStandardMaterial({ color: activeColor, emissive: department.anomalies ? 0x8a682d : 0x22231c, emissiveIntensity: department.anomalies ? 0.22 : 0.1, metalness: 0.5, roughness: 0.34 });
+      const bandMaterial = new THREE.MeshStandardMaterial({ color: department.anomalies ? 0xe7c888 : 0xa3a598, emissive: department.anomalies ? 0xb18b43 : 0x525448, emissiveIntensity: 0.7, roughness: 0.45 });
       allMaterials.push(towerMaterial, bandMaterial);
       mesh(new THREE.CylinderGeometry(1.08, 1.1, 0.12, 48), black, group, [0, 0.06, 0]);
       const halo = horizontalTorus(1.025, 0.018, department.anomalies ? redWire : coolWire, group, 0.14);
@@ -197,7 +197,7 @@ export function CommandScene({ departments, selectedId, onSelect, autoRotate = t
       windows.userData.departmentId = department.id;
       pickables.push(windows);
       body.add(windows);
-      const route = circleLine(1.22, department.anomalies ? 0x8c253b : 0x35546a, 0.6, 48);
+      const route = circleLine(1.22, department.anomalies ? 0x8f723b : 0x5c5c50, 0.6, 48);
       route.position.y = 0.01;
       group.add(route);
       return { department, group, body, halo, towerMaterial, bandMaterial, height, angle, scale: 0.72 };
@@ -213,7 +213,7 @@ export function CommandScene({ departments, selectedId, onSelect, autoRotate = t
       particlePositions[index * 3] = Math.sin(angle) * radius;
       particlePositions[index * 3 + 1] = 0.16 + seeded(index + 1000) * 0.88;
       particlePositions[index * 3 + 2] = Math.cos(angle) * radius;
-      const color = new THREE.Color(index % 5 === 0 ? 0x63c1d4 : index % 3 === 0 ? 0xff7a00 : 0xea234d);
+      const color = new THREE.Color(index % 5 === 0 ? 0xd7d3bf : index % 3 === 0 ? 0xb18b43 : 0xe7c888);
       color.toArray(particleColors, index * 3);
     }
     const particleGeometry = new THREE.BufferGeometry();
@@ -225,7 +225,7 @@ export function CommandScene({ departments, selectedId, onSelect, autoRotate = t
     const particles = new THREE.Points(particleGeometry, particleMaterial);
     stage.add(particles);
 
-    const scanLine = circleLine(5.4, 0xff5264, 0.38);
+    const scanLine = circleLine(5.4, 0xe7c888, 0.38);
     scanLine.position.y = 0.12;
     stage.add(scanLine);
     const scanBead = mesh(new THREE.SphereGeometry(0.065, 8, 8), orangeWire, stage, [0, 0.15, 5.4], false);
