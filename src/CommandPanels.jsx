@@ -78,32 +78,6 @@ export function RiskDistribution({ department }) {
   </section>;
 }
 
-export function DataSignalChart({ departments, selectedId, onSelect }) {
-  const width = 620;
-  const height = 162;
-  const left = 31;
-  const right = 15;
-  const top = 12;
-  const bottom = 27;
-  const plotWidth = width - left - right;
-  const plotHeight = height - top - bottom;
-  const rates = departments.map((department) => rate(department.anomalies, department.transactions));
-  const maximum = Math.max(3, Math.ceil(Math.max(...rates)));
-  const points = rates.map((value, index) => ({ x: left + index * plotWidth / (departments.length - 1), y: top + (1 - value / maximum) * plotHeight }));
-  const path = points.map((point, index) => `${index ? "L" : "M"}${point.x},${point.y}`).join(" ");
-  const area = `${path} L${points[points.length - 1].x},${top + plotHeight} L${left},${top + plotHeight} Z`;
-  return <section className="cp-panel cp-data-signal-chart" aria-label="부서별 이상징후 비율 비교">
-    <PanelTitle eyebrow="DEPARTMENT SIGNAL RATE" title="부서별 탐지 비율" meta="거래 대비 이상징후 · %" />
-    <svg viewBox={`0 0 ${width} ${height}`} className="cp-rate-svg" role="img" aria-label={departments.map((department, index) => `${department.name} ${rates[index].toFixed(2)}퍼센트`).join(", ")}>
-      {Array.from({ length: maximum + 1 }, (_, index) => <g key={index}><line x1={left} x2={width - right} y1={top + (1 - index / maximum) * plotHeight} y2={top + (1 - index / maximum) * plotHeight} className="cp-chart-grid" /><text x={left - 8} y={top + (1 - index / maximum) * plotHeight + 3} textAnchor="end" className="cp-chart-tick">{index}</text></g>)}
-      <path d={area} className="cp-rate-area" />
-      <path d={path} className="cp-rate-line" />
-      {departments.map((department, index) => <g key={department.id}><line x1={points[index].x} x2={points[index].x} y1={points[index].y} y2={top + plotHeight} className="cp-chart-stem" /><circle cx={points[index].x} cy={points[index].y} r={selectedId === department.id ? 4.5 : 3} className={selectedId === department.id ? "cp-rate-dot cp-rate-dot-selected" : "cp-rate-dot"} /><text x={points[index].x} y={height - 8} textAnchor="middle" className={selectedId === department.id ? "cp-chart-name cp-chart-name-selected" : "cp-chart-name"}>{department.name}</text></g>)}
-    </svg>
-    <div className="cp-chart-departments">{departments.map((department, index) => <button key={department.id} type="button" className={selectedId === department.id ? "cp-is-selected" : ""} aria-label={`${department.name} 탐지 비율 ${rates[index].toFixed(2)}퍼센트 선택`} aria-pressed={selectedId === department.id} onClick={(event) => onSelect(department.id, event.currentTarget)}><span>{department.name}</span><strong>{rates[index].toFixed(2)}<small>%</small></strong></button>)}</div>
-  </section>;
-}
-
 export function TransactionFeed({ department, onInspect }) {
   const [query, setQuery] = useState("");
   const [level, setLevel] = useState("all");

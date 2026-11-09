@@ -4,6 +4,7 @@
 
 - Build an ethics audit workspace with five functional modules: upload, anomaly detection, pattern discovery, evidence comparison, and tampering analysis.
 - Latest selected reference: a dramatic dark command center with a large circular 3D platform, architectural department blocks, a precise analytics wall, and metallic gold lighting on a black/graphite base. The latest palette request is gold and black; it supersedes the earlier SK red/orange palette and light dashboard direction.
+- Use the user-supplied TEAM 007 / GOLDFINGER image as the central 3D stage backdrop. Fit its full width to retain all five faces, fade the bottom into black, and keep the real interactive model and controls in front. Do not overlay the redundant rate chart across the faces.
 - Render the central space as real interactive WebGL geometry. Do not flatten the model or operational interface into a generated background image. Keep charts, Korean labels, tables, and controls crisp and functional.
 - Use champagne/brass highlights and warm neutral typography; avoid residual navy, cyan, red, or orange accents in the UI and 3D scene. Keep high, medium, and normal states distinguishable through labels, brightness, and neutral tones.
 - Departments with zero anomalies stay low and neutral; anomaly blocks extend upward in proportion to their counts. Use lighting and subtle data particles to emphasize risk without decorative trees or miniature scenery.

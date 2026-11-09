@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUpRight, Buildings, CalendarBlank, ChartLineUp, Cube, Fingerprint, Pause, Play, ShieldCheck, X } from "@phosphor-icons/react";
 import { FeatureDetail } from "./FeatureDetail.jsx";
 import { CommandScene } from "./CommandScene.jsx";
-import { DataSignalChart, DepartmentRanking, RiskDistribution, SelectedDepartment, SignalOverview, TransactionFeed } from "./CommandPanels.jsx";
+import { DepartmentRanking, RiskDistribution, SelectedDepartment, SignalOverview, TransactionFeed } from "./CommandPanels.jsx";
 import { departments } from "./departments.js";
 import "./command-tools.css";
 
@@ -128,7 +128,7 @@ export function App() {
             </aside>
             <section className="command-stage" aria-labelledby="scene-title">
               <div className="stage-heading"><div><p className="command-eyebrow">SPATIAL RISK MAP</p><h2 id="scene-title">부서별 리스크 맵 <span>3D</span></h2></div><span className="stage-coordinate">06 DEPARTMENTS / 01 ORGANIZATION</span></div>
-              <div className="stage-wall"><DataSignalChart departments={departments} selectedId={departmentId} onSelect={selectDepartment} /></div>
+              <div className="stage-backdrop" aria-hidden="true"><img src="/assets/goldfinger-team.png" alt="" draggable="false" /></div>
               <div className="stage-model" onPointerDownCapture={() => setAutoRotate(false)} onFocusCapture={() => setAutoRotate(false)}><CommandScene departments={departments} selectedId={departmentId} onSelect={selectDepartment} autoRotate={autoRotate} /></div>
               <div className="scene-legend"><span><i className="legend-alert" />이상징후 · 높이로 표시</span><span><i />추가 신호 없음</span></div>
               <div className="scene-toolbar">
