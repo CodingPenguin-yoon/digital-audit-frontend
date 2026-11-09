@@ -1,94 +1,84 @@
 import { useEffect, useState } from "react";
-import { ArrowUpRight, MagnifyingGlass } from "@phosphor-icons/react";
+import { ArrowRight, ArrowUpRight, Buildings, CalendarBlank, CheckSquare, Files, Fingerprint, MagnifyingGlass, Scan, Sparkle, X } from "@phosphor-icons/react";
+import { departments as allDepartments } from "./departments.js";
+import { auditScenarios, auditTypes, getAuditRows } from "./audit-data.js";
 import "./command-panels.css";
 
 const number = (value) => new Intl.NumberFormat("ko-KR").format(value);
-const rate = (signals, total) => total ? signals / total * 100 : 0;
-const signalRows = (department) => department.exampleTransactions.filter((row) => row.level !== "정상");
-const groupSignals = (department) => {
-  const groups = new Map();
-  signalRows(department).forEach((row) => {
-    const previous = groups.get(row.type);
-    groups.set(row.type, { type: row.type, count: (previous?.count || 0) + 1, first: previous?.first || row });
-  });
-  return [...groups.values()];
-};
+const typeIcons = { rules: CheckSquare, compare: Scan, forgery: Fingerprint, discover: Sparkle };
 
 function PanelTitle({ eyebrow, title, meta }) {
   return <header className="cp-panel-heading"><div><span className="cp-eyebrow">{eyebrow}</span><h2>{title}</h2></div>{meta && <span className="cp-panel-meta">{meta}</span>}</header>;
 }
 
-export function DepartmentRanking({ departments, selectedId, onSelect }) {
-  const sorted = [...departments].sort((a, b) => b.anomalies - a.anomalies);
-  const maximum = Math.max(...departments.map((department) => department.anomalies), 1);
-  return <section className="cp-panel cp-ranking" aria-label="부서별 이상징후 순위">
-    <PanelTitle eyebrow="DEPARTMENT SIGNALS" title="부서별 이상징후" meta={`${departments.length} DEPT.`} />
-    <div className="cp-rank-list">{sorted.map((department, index) => <button type="button" key={department.id} className={`cp-rank-row ${selectedId === department.id ? "cp-is-selected" : ""}`} aria-pressed={selectedId === department.id} onClick={(event) => onSelect(department.id, event.currentTarget)}>
-      <span className="cp-rank-index">{String(index + 1).padStart(2, "0")}</span>
-      <span className="cp-rank-body"><span className="cp-rank-name">{department.name}<small>{department.english}</small></span><span className="cp-rank-track"><span style={{ width: `${department.anomalies / maximum * 100}%` }} /></span></span>
-      <span className={`cp-rank-count ${department.anomalies === 0 ? "cp-muted" : ""}`}>{department.anomalies}<small>건</small></span>
-    </button>)}</div>
-    <p className="cp-footnote">블록 높이는 부서별 이상징후 건수에 비례합니다.</p>
+export function AuditScope({ departments, selectedId, onSelect, onOpenUpload }) {
+  const department = departments.find((item) => item.id === selectedId);
+  const scope = department ? [department] : departments;
+  const transactions = scope.reduce((sum, item) => sum + item.transactions, 0);
+  const exampleCount = scope.reduce((sum, item) => sum + item.exampleTransactions.length, 0);
+  return <section className="cp-panel cp-audit-scope" aria-label="이번 감사 범위">
+    <PanelTitle eyebrow="AUDIT SCOPE" title="이번 감사 범위" meta="01" />
+    <div className="cp-scope-period"><CalendarBlank size={19} weight="light" /><div><span>점검 기간 · 예시</span><strong>2026년 3월</strong></div></div>
+    <label className="cp-scope-select"><span><Buildings size={15} />대상 조직</span><select aria-label="감사 대상 조직" value={department?.id || ""} onChange={(event) => onSelect(event.target.value || null)}><option value="">전체 부서</option>{departments.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
+    <dl className="cp-scope-facts"><div><dt>거래 집계 예시</dt><dd>{number(transactions)}<small>건</small></dd></div></dl>
+    <div className="cp-scope-source"><span className="cp-section-label">현재 자료</span><div><Files size={18} weight="light" /><span>거래·증빙 예시<small>화면에 표시한 거래 {exampleCount}건</small></span></div><p><span className="cp-status-dot" />실제 분석 연결 전</p></div>
+    <div className="cp-scope-footer"><button type="button" className="cp-upload-link" onClick={onOpenUpload}>자료 선택하기<ArrowUpRight size={15} /></button></div>
   </section>;
 }
 
-export function SignalOverview({ departments }) {
-  const total = departments.reduce((sum, department) => sum + department.transactions, 0);
-  const signals = departments.reduce((sum, department) => sum + department.anomalies, 0);
-  const flaggedDepartments = departments.filter((department) => department.anomalies > 0).length;
-  const circumference = 2 * Math.PI * 51;
-  const signalArc = circumference * signals / total;
-  const flaggedArc = 2 * Math.PI * 39 * flaggedDepartments / departments.length;
-  return <section className="cp-panel cp-signal-overview" aria-label="전체 거래 이상징후 분포">
-    <PanelTitle eyebrow="SIGNAL COVERAGE" title="전체 신호 분포" meta="예시 전체" />
-    <div className="cp-overview-body">
-      <div className="cp-donut-wrap"><svg viewBox="0 0 136 136" role="img" aria-label={`전체 ${number(total)}건 중 이상징후 ${signals}건, ${rate(signals, total).toFixed(2)}퍼센트`}>
-        <circle className="cp-donut-track" cx="68" cy="68" r="51" />
-        <circle className="cp-donut-alert" cx="68" cy="68" r="51" strokeDasharray={`${signalArc} ${circumference - signalArc}`} transform="rotate(-90 68 68)" />
-        <circle className="cp-donut-inner-track" cx="68" cy="68" r="39" />
-        <circle className="cp-donut-departments" cx="68" cy="68" r="39" strokeDasharray={`${flaggedArc} ${2 * Math.PI * 39 - flaggedArc}`} transform="rotate(-90 68 68)" />
-      </svg><div className="cp-donut-value"><strong>{signals}</strong><span>이상징후</span></div></div>
-      <dl className="cp-overview-values"><div><dt><i className="cp-dot cp-dot-red" />신호 비율</dt><dd className="cp-text-red">{rate(signals, total).toFixed(2)}<small>%</small></dd></div><div><dt><i className="cp-dot cp-dot-orange" />확인 필요 부서</dt><dd>{flaggedDepartments}<small> / {departments.length}</small></dd></div><div><dt><i className="cp-dot cp-dot-slate" />신호 미검출</dt><dd>{number(total - signals)}<small>건</small></dd></div></dl>
-    </div>
-    <p className="cp-footnote">예시 거래 {number(total)}건 기준 · 위반 확정 결과가 아닙니다.</p>
+export function AuditTypes({ department, categoryId, onCategoryChange, dateRange = {}, scenarioId, onOpenPatterns }) {
+  const scope = department ? [department] : allDepartments;
+  const rows = getAuditRows(scope, null, "all", { ...dateRange, scenarioId });
+  return <section className="cp-panel cp-audit-types" aria-label="점검 유형">
+    <PanelTitle eyebrow="AUDIT SIGNALS" title="무엇을 확인할까요" meta="04 TYPES" />
+    <div className="cp-types-scope"><span>{department?.name || "전체 부서"}</span><span>표시된 예시 기준</span></div>
+    <div className="cp-type-list">{auditTypes.map((type) => {
+      const count = getAuditRows(scope, null, type.id, { ...dateRange, scenarioId }).length;
+      const Icon = typeIcons[type.id];
+      const active = categoryId === type.id;
+      return <button type="button" key={type.id} className={`cp-type-button ${active ? "cp-is-active" : ""} ${count === 0 ? "cp-type-empty" : ""}`} aria-pressed={active} onClick={() => onCategoryChange(active ? "all" : type.id)}>
+        <span className="cp-type-icon"><Icon size={21} weight="light" /></span>
+        <span className="cp-type-content"><span className="cp-type-number">SIGNAL {type.number}</span><strong>{type.title}</strong><span>{type.description}</span></span>
+        <span className="cp-type-count">{count}<small>건</small><ArrowRight size={14} /></span>
+      </button>;
+    })}</div>
+    <div className="cp-types-footer"><button type="button" className="cp-clear-type" onClick={() => onCategoryChange("all")} disabled={categoryId === "all"}>전체 유형 보기<ArrowUpRight size={14} /></button><p>검토 거래 {rows.length}건 · 유형별 중복 포함</p><button className="cp-pattern-link" onClick={onOpenPatterns}>새 패턴 검토하기<Sparkle size={14} /></button></div>
   </section>;
 }
 
-export function SelectedDepartment({ department, onInspect }) {
-  if (!department) return null;
-  const groups = groupSignals(department);
-  const first = signalRows(department)[0] || department.exampleTransactions[0];
-  return <section className="cp-panel cp-selected-department" aria-label={`${department.name} 선택 부서 요약`}>
-    <PanelTitle eyebrow={`SELECTED / ${department.english}`} title={department.name} meta={department.anomalies > 0 ? "확인 필요" : "신호 없음"} />
-    <div className="cp-selected-metrics"><div><span>이상징후</span><strong className={department.anomalies ? "cp-text-red" : "cp-text-clear"}>{department.anomalies}<small>건</small></strong></div><div><span>전체 거래</span><strong>{number(department.transactions)}<small>건</small></strong><span className="cp-selected-rate">탐지 비율 {rate(department.anomalies, department.transactions).toFixed(2)}%</span></div></div>
-    <div className="cp-risk-types"><span className="cp-section-label">표시된 예시의 주요 신호</span>{groups.length ? groups.slice(0, 3).map((group) => <button type="button" key={group.type} onClick={() => onInspect(group.first.id)}><i className="cp-dot cp-dot-red" /><span>{group.type}</span><ArrowUpRight size={13} /></button>) : <p className="cp-empty-inline">현재 예시 기준으로 추가 확인 신호가 없습니다.</p>}</div>
-    {first && <div className="cp-first-preview"><span className="cp-section-label">첫 번째 거래 예시</span><div><strong>{first.shop}</strong><span>{first.amount}<small>원</small></span></div><p>{first.date} <span>·</span> {first.id}</p></div>}
-    {first && <button type="button" className="cp-inspect-button" onClick={() => onInspect(first.id)}>거래 근거 확인 <ArrowUpRight size={15} /></button>}
-  </section>;
-}
-
-export function RiskDistribution({ department }) {
-  if (!department) return null;
-  const groups = groupSignals(department);
-  const maximum = Math.max(...groups.map((group) => group.count), 1);
-  return <section className="cp-panel cp-risk-distribution" aria-label={`${department.name} 예시 신호 유형 분포`}>
-    <PanelTitle eyebrow="SIGNAL BREAKDOWN" title="탐지 유형" meta="표시된 예시 기준" />
-    {groups.length ? <div className="cp-distribution-list">{groups.map((group, index) => <div key={group.type} className="cp-distribution-row"><span>{group.type}</span><span className="cp-distribution-track"><span className={index % 2 ? "cp-bar-orange" : ""} style={{ width: `${group.count / maximum * 100}%` }} /></span><strong>{group.count}<small>건</small></strong></div>)}</div> : <div className="cp-empty-chart"><span>00</span><p>표시할 이상징후 유형이 없습니다.</p></div>}
-    <p className="cp-footnote">전체 {department.anomalies}건 중 화면에 표시한 거래 예시의 유형입니다.</p>
-  </section>;
-}
-
-export function TransactionFeed({ department, onInspect }) {
+export function TransactionFeed({ department, departments = allDepartments, categoryId = "all", scenarioId = null, dateRange = {}, reviews = {}, statusFilter = "all", onStatusChange, onCategoryChange, onClearDepartment, onClearScenario, onClearDates, onInspect, includeNormal = false }) {
   const [query, setQuery] = useState("");
   const [level, setLevel] = useState("all");
   const [selected, setSelected] = useState(null);
-  useEffect(() => { setQuery(""); setLevel("all"); setSelected(null); }, [department?.id]);
-  if (!department) return null;
-  const rows = department.exampleTransactions.filter((row) => (level === "all" || row.level === level) && `${row.id} ${row.shop} ${row.type}`.toLowerCase().includes(query.toLowerCase()));
-  const inspect = (id) => { setSelected(id); onInspect(id); };
-  return <section className="cp-panel cp-transaction-feed" aria-label={`${department.name} 거래 예시 목록`}>
-    <div className="cp-feed-heading"><PanelTitle eyebrow="TRANSACTION EVIDENCE" title={`${department.name} 점검 내역`} meta={`예시 ${department.exampleTransactions.length}건`} /><div className="cp-feed-filters"><label className="cp-search"><MagnifyingGlass size={14} aria-hidden="true" /><input type="search" aria-label="거래처, 거래번호, 시나리오 검색" placeholder="거래처·번호·시나리오 검색" value={query} onChange={(event) => setQuery(event.target.value)} /></label><label className="cp-level-filter"><span className="cp-sr-only">위험도 필터</span><select value={level} onChange={(event) => setLevel(event.target.value)}><option value="all">위험도 전체</option><option value="높음">높음</option><option value="보통">보통</option><option value="정상">신호 없음</option></select></label></div></div>
-    <div className="cp-table-wrap"><table className="cp-table"><thead><tr><th>거래 / 일자</th><th>거래처</th><th>결제 금액</th><th>탐지 시나리오</th><th>위험 신호</th><th><span className="cp-sr-only">상세 조회</span></th></tr></thead><tbody>{rows.map((row) => <tr key={row.id} className={selected === row.id ? "cp-row-selected" : ""} onClick={() => inspect(row.id)}><td><button className="cp-transaction-link" type="button" onClick={(event) => { event.stopPropagation(); inspect(row.id); }}><strong>{row.id}</strong><span>{row.date}</span></button></td><td>{row.shop}</td><td className="cp-amount">{row.amount}<small>원</small></td><td>{row.type === "해당 없음" ? "등록 기준 신호 없음" : row.type}</td><td><span className={`cp-risk-badge ${row.level === "높음" ? "cp-risk-high" : row.level === "보통" ? "cp-risk-medium" : "cp-risk-clear"}`}><i />{row.level === "정상" ? "신호 없음" : row.level}</span></td><td><ArrowUpRight size={14} className="cp-row-arrow" aria-hidden="true" /></td></tr>)}</tbody></table>{rows.length === 0 && <p className="cp-feed-empty">조건에 맞는 거래 예시가 없습니다.</p>}</div>
-    <div className="cp-table-footer"><span>표시 {rows.length}건 / 부서 전체 거래 {number(department.transactions)}건</span><span>예시 데이터 · 실제 분석 전</span></div>
+  useEffect(() => { setQuery(""); setLevel("all"); setSelected(null); }, [department?.id, categoryId, scenarioId, dateRange.fromDate, dateRange.toDate]);
+  const scopeRows = getAuditRows(departments, department?.id, categoryId, { ...dateRange, scenarioId, includeNormal });
+  const rows = scopeRows.filter((row) => (statusFilter === "all" || (statusFilter === "unreviewed" ? !reviews[row.id]?.verdict : reviews[row.id]?.verdict === statusFilter))
+    && (level === "all" || row.level === level) && `${row.id} ${row.shop} ${row.type} ${row.departmentName}`.toLowerCase().includes(query.toLowerCase()))
+    .sort((a, b) => Number(b.level === "높음") - Number(a.level === "높음") || b.date.localeCompare(a.date));
+  const category = auditTypes.find((type) => type.id === categoryId);
+  const scenario = auditScenarios.find((item) => item.id === scenarioId);
+  const inspect = (row) => { setSelected(row.id); onInspect(row.id, row.departmentId); };
+  const verdictClass = (value) => value === "위반" ? "violation" : value === "정상" ? "normal" : value === "보류" ? "hold" : "pending";
+  return <section className="cp-panel cp-transaction-feed" aria-label={includeNormal ? "거래 검토 목록" : "우선 검토할 거래 예시"}>
+    <div className="cp-feed-heading"><div><PanelTitle eyebrow="REVIEW QUEUE" title={includeNormal ? "거래 검토 목록" : "우선 검토할 거래"} /><p className="cp-feed-caption">{includeNormal ? "전체 거래 예시 · 탐지 우선도와 담당자 판정은 별도로 표시합니다." : "선택한 범위의 이상징후 예시 · 높은 우선도부터 표시"}</p></div><div className="cp-feed-filters">
+      <label className="cp-search"><MagnifyingGlass size={15} aria-hidden="true" /><input type="search" aria-label="거래처, 거래번호, 부서, 시나리오 검색" placeholder="거래처·부서·시나리오 검색" value={query} onChange={(event) => setQuery(event.target.value)} /></label>
+      <label className="cp-level-filter"><span className="cp-sr-only">검토 우선도</span><select aria-label="검토 우선도" value={level} onChange={(event) => setLevel(event.target.value)}><option value="all">우선도 전체</option><option value="높음">높음</option><option value="보통">보통</option>{includeNormal && <option value="정상">신호 없음</option>}</select></label>
+      <label className="cp-level-filter"><span className="cp-sr-only">판정 상태</span><select aria-label="판정 상태" value={statusFilter} onChange={(event) => onStatusChange(event.target.value)}><option value="all">판정 전체</option><option value="unreviewed">미검토</option><option value="위반">위반</option><option value="정상">정상</option><option value="보류">보류</option></select></label>
+    </div></div>
+    <div className="cp-active-filters"><span>현재 범위</span>
+      {department ? <button type="button" onClick={onClearDepartment} aria-label={`${department.name} 선택 해제`}>{department.name}<X size={12} /></button> : <span className="cp-filter-label">전체 부서</span>}
+      {category ? <button type="button" onClick={() => onCategoryChange("all")} aria-label={`${category.title} 선택 해제`}>{category.title}<X size={12} /></button> : <span className="cp-filter-label">전체 유형</span>}
+      {scenario && <button onClick={onClearScenario} aria-label={`${scenario.title} 시나리오 선택 해제`}>{scenario.title}<X size={12} /></button>}
+      {(dateRange.fromDate || dateRange.toDate) && <button onClick={onClearDates} aria-label="요청 기간 선택 해제">{dateRange.fromDate?.slice(5) || "시작"} ~ {dateRange.toDate?.slice(5) || "종료"}<X size={12} /></button>}
+      <strong>{rows.length}<small>건의 예시</small></strong>
+    </div>
+    <div className="cp-table-wrap"><table className="cp-table"><thead><tr><th>우선도</th><th>거래 / 부서</th><th>사용처</th><th>금액</th><th>시나리오</th><th>판정 상태</th><th>확인할 내용</th><th><span className="cp-sr-only">상세 조회</span></th></tr></thead><tbody>{rows.map((row) => <tr key={row.id} className={selected === row.id ? "cp-row-selected" : ""} onClick={() => inspect(row)}>
+      <td><span className={`cp-risk-badge cp-risk-${row.level === "높음" ? "high" : row.level === "정상" ? "normal" : "medium"}`}>{row.level === "정상" ? "신호 없음" : row.level}</span></td>
+      <td><button className="cp-transaction-link" type="button" onClick={(event) => { event.stopPropagation(); inspect(row); }}><strong>{row.id}</strong><span>{row.departmentName} · {row.date.slice(5)}</span></button></td><td>{row.shop}</td><td className="cp-amount">{row.amount}<small>원</small></td><td>{row.type}</td>
+      <td><span className={`cp-verdict cp-verdict-${verdictClass(reviews[row.id]?.verdict)}`}>{reviews[row.id]?.verdict || "미검토"}</span></td>
+      <td className="cp-reason-cell"><span title={reviews[row.id]?.opinion || row.reason}>{reviews[row.id]?.opinion || row.reason}</span></td><td><ArrowUpRight size={15} className="cp-row-arrow" aria-hidden="true" /></td></tr>)}</tbody></table>
+      {rows.length === 0 && <div className="cp-feed-empty"><Scan size={24} weight="light" /><strong>선택한 조건의 검토 거래가 없습니다.</strong><span>다른 부서·시나리오 또는 판정 상태를 선택해 보세요.</span>{(query || level !== "all" || statusFilter !== "all") && <button type="button" onClick={() => { setQuery(""); setLevel("all"); onStatusChange("all"); }}>검색·우선도·판정 초기화</button>}</div>}
+    </div>
+    <div className="cp-table-footer"><span>표시 {rows.length}건 / 선택 범위 {scopeRows.length}건</span><span>거래 선택 → 근거 확인 → 판정 저장<ArrowUpRight size={12} /></span></div>
   </section>;
 }
