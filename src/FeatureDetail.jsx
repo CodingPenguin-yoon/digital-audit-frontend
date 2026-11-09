@@ -39,11 +39,11 @@ function Upload({ onNavigate }) {
   </>;
 }
 
-function Detect({ department }) {
+function Detect({ department, initialTransactionId }) {
   const departmentTransactions = department?.exampleTransactions ?? transactions;
   const [query, setQuery] = useState("");
   const [level, setLevel] = useState("전체");
-  const [selected, setSelected] = useState(departmentTransactions[0] ?? null);
+  const [selected, setSelected] = useState(() => departmentTransactions.find((item) => item.id === initialTransactionId) ?? departmentTransactions[0] ?? null);
   const rows = departmentTransactions.filter((item) => (level === "전체" || item.level === level) && `${item.id} ${item.shop} ${item.type}`.toLowerCase().includes(query.toLowerCase()));
   const total = department?.transactions ?? departmentTransactions.length;
   const anomalies = department?.anomalies ?? departmentTransactions.filter((item) => item.level !== "정상").length;
@@ -104,9 +104,10 @@ function Forgery() {
   </>;
 }
 
-export function FeatureDetail({ feature, onNavigate, department }) {
+export function FeatureDetail({ feature, onNavigate, department, initialTransactionId }) {
+  const sharedExample = feature.id === "compare" || feature.id === "forgery";
   return <div className="fd-shell" style={{ "--fd-accent": feature.color || "#cbd6c4" }}>
     <aside className="fd-sidebar">{department && <span className="fd-department">{department.name}</span>}<span className="fd-kicker">MODULE {feature.number}</span><h2>{feature.title}</h2><p className="fd-description">{feature.description}</p><nav aria-label="감사 기능"><div className="fd-nav-label">WORKSPACE</div>{modules.map(([id, number, title]) => <button key={id} type="button" className={`fd-nav-item ${feature.id === id ? "fd-nav-active" : ""}`} aria-current={feature.id === id ? "page" : undefined} onClick={() => onNavigate(id)}><span>{number}</span>{title}</button>)}</nav><div className="fd-sidebar-note">작은 신호에서 시작하는<br />더 정확한 점검.</div></aside>
-    <div className="fd-content"><div className="fd-demo-label"><span aria-hidden="true" />{department && `${department.name} · `}예시 데이터 · 실제 분석 전</div>{department && <p className="fd-context-note">선택 부서의 화면 흐름용 예시입니다. 실제 부서 데이터의 분석 결과가 아닙니다.</p>}{feature.id === "upload" && <Upload onNavigate={onNavigate} />}{feature.id === "detect" && <Detect key={department?.id || "workspace"} department={department} />}{feature.id === "discover" && <Discover key={department?.id || "workspace"} department={department} />}{feature.id === "compare" && <Compare />}{feature.id === "forgery" && <Forgery />}</div>
+    <div className="fd-content"><div className="fd-demo-label"><span aria-hidden="true" />{department && `${department.name} · `}예시 데이터 · 실제 분석 전</div>{department && <p className="fd-context-note">{sharedExample ? "공통 기능 시나리오 예시입니다. 선택 부서의 거래 및 이상징후 집계와 별개입니다." : "선택 부서의 화면 흐름용 예시입니다. 실제 부서 데이터의 분석 결과가 아닙니다."}</p>}{feature.id === "upload" && <Upload onNavigate={onNavigate} />}{feature.id === "detect" && <Detect key={department?.id || "workspace"} department={department} initialTransactionId={initialTransactionId} />}{feature.id === "discover" && <Discover key={department?.id || "workspace"} department={department} />}{feature.id === "compare" && <Compare />}{feature.id === "forgery" && <Forgery />}</div>
   </div>;
 }
