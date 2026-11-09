@@ -39,17 +39,20 @@ function Upload({ onNavigate }) {
   </>;
 }
 
-function Detect() {
+function Detect({ department }) {
+  const departmentTransactions = department?.exampleTransactions ?? transactions;
   const [query, setQuery] = useState("");
   const [level, setLevel] = useState("전체");
-  const [selected, setSelected] = useState(transactions[0]);
-  const rows = transactions.filter((item) => (level === "전체" || item.level === level) && `${item.id} ${item.shop} ${item.type}`.toLowerCase().includes(query.toLowerCase()));
+  const [selected, setSelected] = useState(departmentTransactions[0] ?? null);
+  const rows = departmentTransactions.filter((item) => (level === "전체" || item.level === level) && `${item.id} ${item.shop} ${item.type}`.toLowerCase().includes(query.toLowerCase()));
+  const total = department?.transactions ?? departmentTransactions.length;
+  const anomalies = department?.anomalies ?? departmentTransactions.filter((item) => item.level !== "정상").length;
   return <>
-    <div className="fd-heading"><span className="fd-kicker">FIND WHAT NEEDS ATTENTION</span><h3>확인이 필요한 거래부터</h3><p>위험 신호를 좁히고, 각 거래의 근거를 확인하세요.</p></div>
-    <div className="fd-metrics"><div><span>예시 거래</span><strong>4<span>건</span></strong></div><div><span>확인 필요</span><strong>3<span>건</span></strong></div><div><span>연결된 시나리오</span><strong>3<span>개</span></strong></div></div>
+    <div className="fd-heading"><span className="fd-kicker">FIND WHAT NEEDS ATTENTION</span><h3>{department ? `${department.name}, 거래 살펴보기` : "확인이 필요한 거래부터"}</h3><p>위험 신호를 좁히고, 각 거래의 근거를 확인하세요.</p></div>
+    <div className="fd-metrics"><div><span>전체 거래</span><strong>{total.toLocaleString("ko-KR")}<span>건</span></strong></div><div><span>이상징후</span><strong>{anomalies.toLocaleString("ko-KR")}<span>건</span></strong></div><div><span>표시한 예시</span><strong>{rows.length}<span>건</span></strong></div></div>
     <div className="fd-filters"><label><span className="fd-sr-only">가맹점, 거래번호, 시나리오 검색</span><input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="가맹점 또는 시나리오 검색" /></label><label><span className="fd-sr-only">위험도</span><select value={level} onChange={(event) => setLevel(event.target.value)}>{["전체", "높음", "보통", "정상"].map((value) => <option key={value} value={value}>{value === "전체" ? "위험도 전체" : value}</option>)}</select></label></div>
-    <div className="fd-table-wrap"><table className="fd-table"><thead><tr><th>거래 / 가맹점</th><th>결제 금액</th><th>시나리오</th><th>위험도</th></tr></thead><tbody>{rows.map((item) => <tr key={item.id} className={selected.id === item.id ? "fd-selected-row" : ""}><td><button type="button" className="fd-row-button" aria-pressed={selected.id === item.id} onClick={() => setSelected(item)}><strong>{item.shop}</strong><span>{item.date} · {item.id}</span></button></td><td className="fd-nowrap">{item.amount}원</td><td>{item.type}</td><td><span className={`fd-badge fd-risk-${item.level === "높음" ? "high" : item.level === "보통" ? "medium" : "normal"}`}>{item.level}</span></td></tr>)}</tbody></table>{rows.length === 0 && <p className="fd-empty">조건에 맞는 예시 거래가 없습니다.</p>}</div>
-    <section className="fd-evidence" aria-live="polite"><span className="fd-kicker">검토 근거 · {selected.id}</span><h4>{selected.type === "해당 없음" ? "등록 기준에 해당하는 신호 없음" : selected.type}</h4><p>{selected.reason}</p><div className="fd-evidence-note">{selected.evidence}</div><p className="fd-small-note">이상징후는 검토를 위한 신호입니다. 위반 여부는 담당자가 판단합니다.</p></section>
+    <div className="fd-table-wrap"><table className="fd-table"><thead><tr><th>거래 / 가맹점</th><th>결제 금액</th><th>시나리오</th><th>위험도</th></tr></thead><tbody>{rows.map((item) => <tr key={item.id} className={selected?.id === item.id ? "fd-selected-row" : ""}><td><button type="button" className="fd-row-button" aria-pressed={selected?.id === item.id} onClick={() => setSelected(item)}><strong>{item.shop}</strong><span>{item.date} · {item.id}</span></button></td><td className="fd-nowrap">{item.amount}원</td><td>{item.type}</td><td><span className={`fd-badge fd-risk-${item.level === "높음" ? "high" : item.level === "보통" ? "medium" : "normal"}`}>{item.level}</span></td></tr>)}</tbody></table>{rows.length === 0 && <p className="fd-empty">조건에 맞는 예시 거래가 없습니다.</p>}</div>
+    {selected && <section className="fd-evidence" aria-live="polite"><span className="fd-kicker">검토 근거 · {selected.id}</span><h4>{selected.type === "해당 없음" ? "등록 기준에 해당하는 신호 없음" : selected.type}</h4><p>{selected.reason}</p><div className="fd-evidence-note">{selected.evidence}</div><p className="fd-small-note">이상징후는 검토를 위한 신호입니다. 위반 여부는 담당자가 판단합니다.</p></section>}
   </>;
 }
 
@@ -58,13 +61,14 @@ const patterns = [
   { title: "특정 가맹점에 집중된 사용", description: "동료 그룹의 사용과 비교해 한 가맹점에 몰린 거래를 살펴봅니다.", count: "9건", signal: "월간 사용 비중 증가 · 동일 가맹점 반복", records: [["센트럴 라운지", "3월 첫째 주", "3회 방문"], ["센트럴 라운지", "3월 둘째 주", "4회 방문"]] },
   { title: "이어지는 심야 시간 결제", description: "업무 시간 밖에서 연속 발생한 결제 패턴을 살펴봅니다.", count: "4건", signal: "23시 이후 · 반복 요일 · 동일 업종", records: [["시티 라운지", "03.13 / 23:42", "148,000원"], ["시티 라운지", "03.20 / 23:18", "162,000원"]] },
 ];
-function Discover() {
+function Discover({ department }) {
+  const departmentPatterns = department?.patterns ?? patterns;
   const [active, setActive] = useState(0);
-  const pattern = patterns[active];
+  const pattern = departmentPatterns[active];
   return <>
-    <div className="fd-heading"><span className="fd-kicker">LOOK BEYOND THE RULES</span><h3>기존 기준 너머의 신호</h3><p>새로운 점검 기준으로 검토할 수 있는 패턴의 예시입니다.</p></div>
-    <div className="fd-patterns">{patterns.map((item, index) => <button type="button" key={item.title} className={`fd-pattern ${active === index ? "fd-pattern-active" : ""}`} aria-pressed={active === index} onClick={() => setActive(index)}><span className="fd-kicker">PATTERN 0{index + 1}</span><strong>{item.title}</strong><span>{item.description}</span><em>{item.count}의 예시 거래</em></button>)}</div>
-    <section className="fd-evidence" aria-live="polite"><span className="fd-kicker">패턴 검토</span><h4>{pattern.title}</h4><p>{pattern.signal}</p><div className="fd-table-wrap"><table className="fd-table"><thead><tr><th>가맹점</th><th>시점</th><th>관찰 내용</th></tr></thead><tbody>{pattern.records.map((record, index) => <tr key={index}>{record.map((value, cell) => <td key={cell}>{value}</td>)}</tr>)}</tbody></table></div><p className="fd-small-note">화면 흐름을 설명하는 가상 패턴입니다. 실제 데이터에서 발견한 결과가 아닙니다.</p></section>
+    <div className="fd-heading"><span className="fd-kicker">LOOK BEYOND THE RULES</span><h3>기존 기준 너머의 신호</h3><p>{department ? `${department.name}에서 살펴보는 패턴 화면의 예시입니다.` : "새로운 점검 기준으로 검토할 수 있는 패턴의 예시입니다."}</p></div>
+    <div className="fd-patterns">{departmentPatterns.map((item, index) => <button type="button" key={item.title} className={`fd-pattern ${active === index ? "fd-pattern-active" : ""}`} aria-pressed={active === index} onClick={() => setActive(index)}><span className="fd-kicker">PATTERN 0{index + 1}</span><strong>{item.title}</strong><span>{item.description}</span><em>{item.count}의 예시 거래</em></button>)}</div>
+    {pattern ? <section className="fd-evidence" aria-live="polite"><span className="fd-kicker">패턴 검토</span><h4>{pattern.title}</h4><p>{pattern.signal}</p><div className="fd-table-wrap"><table className="fd-table"><thead><tr><th>가맹점</th><th>시점</th><th>관찰 내용</th></tr></thead><tbody>{pattern.records.map((record, index) => <tr key={index}>{record.map((value, cell) => <td key={cell}>{value}</td>)}</tr>)}</tbody></table></div><p className="fd-small-note">화면 흐름을 설명하는 가상 패턴입니다. 실제 데이터에서 발견한 결과가 아닙니다.</p></section> : <p className="fd-empty">이 부서에 표시할 새 패턴 예시가 없습니다.</p>}
   </>;
 }
 
@@ -100,9 +104,9 @@ function Forgery() {
   </>;
 }
 
-export function FeatureDetail({ feature, onNavigate }) {
+export function FeatureDetail({ feature, onNavigate, department }) {
   return <div className="fd-shell" style={{ "--fd-accent": feature.color || "#cbd6c4" }}>
-    <aside className="fd-sidebar"><span className="fd-kicker">MODULE {feature.number}</span><h2>{feature.title}</h2><p className="fd-description">{feature.description}</p><nav aria-label="감사 기능"><div className="fd-nav-label">WORKSPACE</div>{modules.map(([id, number, title]) => <button key={id} type="button" className={`fd-nav-item ${feature.id === id ? "fd-nav-active" : ""}`} aria-current={feature.id === id ? "page" : undefined} onClick={() => onNavigate(id)}><span>{number}</span>{title}</button>)}</nav><div className="fd-sidebar-note">작은 신호에서 시작하는<br />더 정확한 점검.</div></aside>
-    <div className="fd-content"><div className="fd-demo-label"><span aria-hidden="true" />예시 데이터 · 실제 분석 전</div>{feature.id === "upload" && <Upload onNavigate={onNavigate} />}{feature.id === "detect" && <Detect />}{feature.id === "discover" && <Discover />}{feature.id === "compare" && <Compare />}{feature.id === "forgery" && <Forgery />}</div>
+    <aside className="fd-sidebar">{department && <span className="fd-department">{department.name}</span>}<span className="fd-kicker">MODULE {feature.number}</span><h2>{feature.title}</h2><p className="fd-description">{feature.description}</p><nav aria-label="감사 기능"><div className="fd-nav-label">WORKSPACE</div>{modules.map(([id, number, title]) => <button key={id} type="button" className={`fd-nav-item ${feature.id === id ? "fd-nav-active" : ""}`} aria-current={feature.id === id ? "page" : undefined} onClick={() => onNavigate(id)}><span>{number}</span>{title}</button>)}</nav><div className="fd-sidebar-note">작은 신호에서 시작하는<br />더 정확한 점검.</div></aside>
+    <div className="fd-content"><div className="fd-demo-label"><span aria-hidden="true" />{department && `${department.name} · `}예시 데이터 · 실제 분석 전</div>{department && <p className="fd-context-note">선택 부서의 화면 흐름용 예시입니다. 실제 부서 데이터의 분석 결과가 아닙니다.</p>}{feature.id === "upload" && <Upload onNavigate={onNavigate} />}{feature.id === "detect" && <Detect key={department?.id || "workspace"} department={department} />}{feature.id === "discover" && <Discover key={department?.id || "workspace"} department={department} />}{feature.id === "compare" && <Compare />}{feature.id === "forgery" && <Forgery />}</div>
   </div>;
 }
