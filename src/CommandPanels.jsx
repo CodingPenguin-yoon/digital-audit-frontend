@@ -26,14 +26,14 @@ export function AuditScope({ departments, selectedId, onSelect, onOpenUpload }) 
   </section>;
 }
 
-export function AuditTypes({ department, categoryId, onCategoryChange, dateRange = {}, scenarioId, onOpenPatterns }) {
+export function AuditTypes({ department, categoryId, onCategoryChange, dateRange = {}, onOpenPatterns }) {
   const scope = department ? [department] : allDepartments;
-  const rows = getAuditRows(scope, null, "all", { ...dateRange, scenarioId });
+  const rows = getAuditRows(scope, null, "all", dateRange);
   return <section className="cp-panel cp-audit-types" aria-label="점검 유형">
     <PanelTitle eyebrow="AUDIT SIGNALS" title="무엇을 확인할까요" meta="04 TYPES" />
-    <div className="cp-types-scope"><span>{department?.name || "전체 부서"}</span><span>표시된 예시 기준</span></div>
+    <div className="cp-types-scope"><span>{department?.name || "전체 부서"}</span><span>전체 항목 예시 기준</span></div>
     <div className="cp-type-list">{auditTypes.map((type) => {
-      const count = getAuditRows(scope, null, type.id, { ...dateRange, scenarioId }).length;
+      const count = getAuditRows(scope, null, type.id, dateRange).length;
       const Icon = typeIcons[type.id];
       const active = categoryId === type.id;
       return <button type="button" key={type.id} className={`cp-type-button ${active ? "cp-is-active" : ""} ${count === 0 ? "cp-type-empty" : ""}`} aria-pressed={active} onClick={() => onCategoryChange(active ? "all" : type.id)}>

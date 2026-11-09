@@ -43,17 +43,20 @@ export function getAuditRows(departments, departmentId = null, categoryId = "all
       .map((record) => ({ ...record, departmentId: department.id, departmentName: department.name, scenarioId: auditScenarios.find((scenario) => scenario.title === record.type)?.id || null })));
 }
 
-// The matrix and review queue share the same transaction examples and filters.
-// Ranking is stable on ties and independent of the selected matrix cell.
-export function buildRiskMatrix(departments, categoryId = "all", dateRange = {}) {
-  const rows = getAuditRows(departments, null, categoryId, dateRange);
-  const scenarios = auditScenarios.filter((scenario) => categoryId === "all" || scenario.categories.includes(categoryId));
-  const ranked = departments.map((department) => ({ ...department, anomalies: rows.filter((row) => row.departmentId === department.id).length }))
+// Both circular levels and the review queue use the same transaction examples.
+// An explicit organization-wide scenario filter can narrow overview counts.
+export function getDepartmentSignals(departments, categoryId = "all", { fromDate = null, toDate = null, scenarioId = null } = {}) {
+  const rows = getAuditRows(departments, null, categoryId, { fromDate, toDate, scenarioId });
+  return departments.map((department) => ({ ...department, anomalies: rows.filter((row) => row.departmentId === department.id).length }))
     .sort((a, b) => b.anomalies - a.anomalies).slice(0, 8);
-  const cells = ranked.flatMap((department) => scenarios.map((scenario) => ({
-    departmentId: department.id,
-    scenarioId: scenario.id,
-    count: rows.filter((row) => row.departmentId === department.id && row.scenarioId === scenario.id).length,
-  })));
-  return { departments: ranked, scenarios, cells, total: cells.reduce((sum, cell) => sum + cell.count, 0) };
+}
+
+export function getScenarioSignals(departments, departmentId, categoryId = "all", { fromDate = null, toDate = null } = {}) {
+  return auditScenarios
+    .filter((scenario) => categoryId === "all" || scenario.categories.includes(categoryId))
+    .map((scenario) => ({
+      ...scenario,
+      name: scenario.title,
+      anomalies: getAuditRows(departments, departmentId, categoryId, { fromDate, toDate, scenarioId: scenario.id }).length,
+    }));
 }

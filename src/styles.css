@@ -34,11 +34,6 @@
 .stage-coordinate strong{display:block;color:#f1e5cd;font-size:26px;line-height:1.2;font-weight:450;margin-top:5px;font-variant-numeric:tabular-nums}
 .stage-coordinate small{font-size:10px;color:#a69b85;font-weight:400;margin-left:6px}
 .stage-model{position:absolute;top:66px;bottom:65px;left:0;right:0;z-index:2}
-.scene-selection{position:absolute;left:22px;top:78px;z-index:4;display:flex;align-items:center;gap:8px;font-size:10px;color:#d0c3a8;max-width:calc(100% - 44px)}
-.scene-selection>span{padding:4px 7px;background:#12110ddb;border:1px solid #5d4e3370;border-radius:3px;white-space:nowrap}
-.scene-selection>span:first-child{color:#f0d29a}
-.scene-selection button{display:flex;align-items:center;gap:3px;padding:4px;background:#12110ddb;color:#b6a78b;font-size:10px;white-space:nowrap}
-.scene-selection button:hover{color:#fff0ce}
 .scene-legend{z-index:3;display:flex;gap:14px;position:absolute;left:22px;bottom:61px;font-size:9px;color:#b6a990;pointer-events:none}
 .scene-legend>span{display:flex;align-items:center;gap:5px}
 .scene-legend i{display:inline-block;width:5px;height:5px;border-radius:50%;background:#92958b}
@@ -62,7 +57,7 @@
 .tools-workspace{padding-bottom:14px}.tools-heading{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #3b3529;padding:5px 0 23px}.tools-heading h1{margin:0;font-size:26px;font-weight:550;letter-spacing:-1px;outline:none}.tools-heading>label{display:flex;align-items:center;gap:12px;font-size:11px;color:#a99d87}.tools-heading select{height:36px;padding:0 35px 0 12px;background:#1a1811;border:1px solid #51452f;color:#e9dfca;border-radius:3px;font-size:11px}
 
 @media(min-width:1700px){.command-app{padding-inline:44px}.command-grid{grid-template-columns:230px minmax(0,1fr) 284px;gap:26px}.command-stage{height:580px}.stage-model{top:68px;bottom:65px}}
-@media(max-width:1250px){.command-app{padding-inline:22px}.command-header{gap:30px}.command-grid{grid-template-columns:186px minmax(0,1fr) 232px;gap:16px}.audit-summary{gap:12px}.audit-summary>span+span{padding-left:12px}.audit-summary-label{display:none}.stage-heading{margin-inline:16px}.stage-coordinate{font-size:9px}.stage-coordinate strong{font-size:23px}.scene-help{display:none}.scene-toolbar{left:16px;right:16px;justify-content:center}.scene-index{position:absolute;right:0}.scene-selection{left:16px;gap:5px}.scene-legend{left:16px;gap:10px}.legend-note{display:none}}
-@media(max-width:1050px){.command-app{padding-inline:18px}.command-grid{grid-template-columns:174px minmax(0,1fr) 212px;gap:12px}.command-header{gap:26px}.command-brand{font-size:18px}.command-nav{gap:20px}.command-intro h1{font-size:25px}.audit-summary{font-size:10px;gap:10px}.audit-summary>span+span{padding-left:10px}.audit-summary strong{font-size:17px}.stage-coordinate{display:none}.scene-selection>span{font-size:9px}.scene-selection button{font-size:9px}.scene-index{font-size:9px}.scene-controls>button.auto-control{width:105px}.header-context{font-size:10px}}
+@media(max-width:1250px){.command-app{padding-inline:22px}.command-header{gap:30px}.command-grid{grid-template-columns:186px minmax(0,1fr) 232px;gap:16px}.audit-summary{gap:12px}.audit-summary>span+span{padding-left:12px}.audit-summary-label{display:none}.stage-heading{margin-inline:16px}.stage-coordinate{font-size:9px}.stage-coordinate strong{font-size:23px}.scene-help{display:none}.scene-toolbar{left:16px;right:16px;justify-content:center}.scene-index{position:absolute;right:0}.scene-legend{left:16px;gap:10px}.legend-note{display:none}}
+@media(max-width:1050px){.command-app{padding-inline:18px}.command-grid{grid-template-columns:174px minmax(0,1fr) 212px;gap:12px}.command-header{gap:26px}.command-brand{font-size:18px}.command-nav{gap:20px}.command-intro h1{font-size:25px}.audit-summary{font-size:10px;gap:10px}.audit-summary>span+span{padding-left:10px}.audit-summary strong{font-size:17px}.stage-coordinate{display:none}.scene-index{font-size:9px}.scene-controls>button.auto-control{width:105px}.header-context{font-size:10px}}
 @media(min-width:960px){body{min-width:0}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}

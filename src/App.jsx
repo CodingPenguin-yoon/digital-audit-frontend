@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowRight, CalendarBlank, Cube, Fingerprint, Pause, Play, ShieldCheck, Sparkle, UploadSimple, X } from "@phosphor-icons/react";
+import { ArrowLeft, ArrowRight, CalendarBlank, CaretRight, Cube, Fingerprint, Pause, Play, ShieldCheck, Sparkle, UploadSimple, X } from "@phosphor-icons/react";
 import { Upload } from "./FeatureDetail.jsx";
 import { CommandScene } from "./CommandScene.jsx";
 import { AuditScope, AuditTypes, TransactionFeed } from "./CommandPanels.jsx";
 import { TransactionReview } from "./TransactionReview.jsx";
 import { NaturalAuditRequest, PatternWorkbench } from "./WorkflowPanels.jsx";
 import { departments } from "./departments.js";
-import { auditScenarios, auditTypes, buildRiskMatrix, getAuditRows } from "./audit-data.js";
+import { auditScenarios, auditTypes, getDepartmentSignals, getScenarioSignals, getAuditRows } from "./audit-data.js";
 import "./command-tools.css";
 import "./audit-workspace.css";
 
@@ -34,19 +34,23 @@ export function App() {
   const [dateRange, setDateRange] = useState({});
   const [activeModule, setActiveModule] = useState("review");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [autoRotate, setAutoRotate] = useState(false);
+  const [autoRotate, setAutoRotate] = useState(() => !window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   const [inspectedId, setInspectedId] = useState(null);
   const [reviews, setReviews] = useState(() => readSaved("digital-audit-reviews-v1"));
   const [patternDecisions, setPatternDecisions] = useState(() => readSaved("digital-audit-patterns-v1"));
   const [storageWarning, setStorageWarning] = useState(false);
   const toolsHeading = useRef(null);
+  const sceneHeading = useRef(null);
   const inspectorOrigin = useRef(null);
   const department = departments.find((item) => item.id === departmentId) || null;
   const inspectedDepartment = departments.find((item) => item.exampleTransactions.some((record) => record.id === inspectedId));
   const inspectedRecord = inspectedDepartment?.exampleTransactions.find((item) => item.id === inspectedId);
   const category = auditTypes.find((item) => item.id === categoryId);
   const scenario = auditScenarios.find((item) => item.id === scenarioId);
-  const matrix = useMemo(() => buildRiskMatrix(departments, categoryId, dateRange), [categoryId, dateRange]);
+  const sceneDepartments = useMemo(() => getDepartmentSignals(departments, categoryId, { ...dateRange, scenarioId: departmentId ? null : scenarioId }), [categoryId, dateRange, departmentId, scenarioId]);
+  const sceneScenarios = useMemo(() => getScenarioSignals(departments, departmentId, categoryId, dateRange), [departmentId, categoryId, dateRange]);
+  const sceneItems = department ? sceneScenarios : sceneDepartments;
+  const sceneTotal = sceneItems.reduce((sum, item) => sum + item.anomalies, 0);
   const filterOptions = { ...dateRange, scenarioId };
   const visibleSignals = getAuditRows(departments, departmentId, categoryId, filterOptions).length;
   const unreviewedCount = getAuditRows(departments, null, "all", { includeNormal: true }).filter((record) => !reviews[record.id]?.verdict).length;
@@ -69,16 +73,30 @@ export function App() {
 
   const selectDepartment = useCallback((id) => {
     setDepartmentId(id);
+    setScenarioId(null);
+    setStatusFilter("all");
     setAutoRotate(false);
   }, []);
+  const enterDepartment = (id) => {
+    setDepartmentId(id);
+    setStatusFilter("all");
+    setAutoRotate(false);
+    window.requestAnimationFrame(() => sceneHeading.current?.focus({ preventScroll: true }));
+  };
+  const returnToDepartments = () => {
+    setDepartmentId(null);
+    setScenarioId(null);
+    setStatusFilter("all");
+    setAutoRotate(!window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    window.requestAnimationFrame(() => sceneHeading.current?.focus({ preventScroll: true }));
+  };
   const selectCategory = (id) => {
     setCategoryId(id);
     setScenarioId(null);
     setAutoRotate(false);
   };
-  const selectCell = (id, scenario) => {
-    setDepartmentId(id);
-    setScenarioId(scenario);
+  const selectScenario = (id) => {
+    setScenarioId((current) => current === id ? null : id);
     setStatusFilter("all");
     setAutoRotate(false);
   };
@@ -145,13 +163,13 @@ export function App() {
           <div className="command-grid">
             <aside className="command-left" aria-label="감사 범위"><AuditScope departments={departments} selectedId={departmentId} onSelect={selectDepartment} onOpenUpload={() => openTools("upload")} /></aside>
             <section className="command-stage" aria-labelledby="scene-title">
-              <div className="stage-heading"><div><p className="command-eyebrow">SCENARIO × DEPARTMENT</p><h2 id="scene-title">시나리오별 리스크 맵 <span>3D</span></h2></div><span className="stage-coordinate">{category?.title || "전체 점검 유형"}<strong>{matrix.total}<small>건 · 표시된 예시</small></strong></span></div>
-              <div className="scene-selection"><span>{department?.name || "전체 부서"}</span><span>{scenario?.title || "전체 시나리오"}</span>{(department || scenario) && <button onClick={() => { setDepartmentId(null); setScenarioId(null); }} aria-label="맵 선택 해제"><X size={12} />선택 해제</button>}</div>
-              <div className="stage-model" onPointerDownCapture={() => setAutoRotate(false)} onFocusCapture={() => setAutoRotate(false)}><CommandScene departments={matrix.departments} scenarios={matrix.scenarios} cells={matrix.cells} selectedId={departmentId} selectedScenarioId={scenarioId} onSelect={selectCell} autoRotate={autoRotate} /></div>
+              <div className="stage-heading"><div><p className="command-eyebrow">{department ? "DEPARTMENT / CHECK ITEMS" : "ORGANIZATION / DEPARTMENTS"}</p><h2 id="scene-title" ref={sceneHeading} tabIndex={-1}>{department ? `${department.name}의 점검 항목` : "조직 리스크 맵"} <span>3D</span></h2></div><span className="stage-coordinate">{category?.title || "전체 점검 유형"}<strong>{sceneTotal}<small>건 · {department ? "부서 전체 항목" : "표시된 부서"} 예시</small></strong></span></div>
+              <div className="scene-drilldown"><nav className="scene-path" aria-label="3D 탐색 경로">{department ? <><button type="button" onClick={returnToDepartments}>전체 부서</button><CaretRight size={11} /><span aria-current="page">{department.name}</span></> : <span aria-current="page">전체 부서</span>}{scenario && <><CaretRight size={11} /><button className="scene-scenario-chip" onClick={() => setScenarioId(null)} aria-label="점검 항목 선택 해제">{scenario.title}<X size={11} /></button></>}</nav>{department && <button className="scene-back" type="button" onClick={returnToDepartments} aria-label="전체 부서로 돌아가기"><ArrowLeft size={12} />부서 맵으로</button>}</div>
+              <div className="stage-model" onPointerDownCapture={() => setAutoRotate(false)} onFocusCapture={() => setAutoRotate(false)}><CommandScene key={department?.id || "overview"} items={sceneItems} mode={department ? "scenarios" : "departments"} selectedId={department ? scenarioId : null} onSelect={department ? selectScenario : enterDepartment} autoRotate={autoRotate} /></div>
               <div className="scene-legend"><span><i className="legend-alert" />검토 신호</span><span><i />0건</span><span className="legend-note">높이 · 거래 건수</span></div>
-              <div className="scene-toolbar"><span className="scene-help">신호 건수 상위 최대 8개 · 현재 {matrix.departments.length}개 부서</span><div className="scene-controls"><button className="auto-control" onClick={() => setAutoRotate((value) => !value)} aria-pressed={autoRotate}>{autoRotate ? <Pause size={14} weight="fill" /> : <Play size={14} weight="fill" />}<span>{autoRotate ? "자동 회전 중" : "자동 회전"}</span></button></div></div>
+              <div className="scene-toolbar"><span className="scene-help">{department ? `${sceneScenarios.length}개 항목 · 선택하면 해당 거래 표시` : `${sceneDepartments.length}개 부서 · 건물을 선택해 상세 탐색`}</span><div className="scene-controls"><button className="auto-control" onClick={() => setAutoRotate((value) => !value)} aria-pressed={autoRotate}>{autoRotate ? <Pause size={14} weight="fill" /> : <Play size={14} weight="fill" />}<span>{autoRotate ? "자동 회전 중" : "자동 회전"}</span></button></div></div>
             </section>
-            <aside className="command-right" aria-label="점검 유형"><AuditTypes department={department} categoryId={categoryId} onCategoryChange={selectCategory} dateRange={dateRange} scenarioId={scenarioId} onOpenPatterns={() => openTools("patterns")} /></aside>
+            <aside className="command-right" aria-label="점검 유형"><AuditTypes department={department} categoryId={categoryId} onCategoryChange={selectCategory} dateRange={dateRange} onOpenPatterns={() => openTools("patterns")} /></aside>
           </div>
           <section className="command-feed"><TransactionFeed {...feedProps} /></section>
           <p className="sr-only" role="status">{department?.name || "전체 부서"}, {scenario?.title || category?.title || "전체 시나리오"}. 검토할 예시 거래 {visibleSignals}건.</p>
